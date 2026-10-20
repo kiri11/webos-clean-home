@@ -1,0 +1,28 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Clean Home</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+    <h1>Clean Home</h1>
+    <p class="lead">Replaces the Home screen's view with a clock, your apps and your inputs. The stock Home app keeps running underneath, so turning it off brings everything back.</p>
+    <dl id="status">
+        <dt>Home screen</dt><dd id="state">…</dd>
+        <dt>At boot</dt><dd id="boot">…</dd>
+        <dt>This firmware</dt><dd id="firmware">…</dd>
+        <dt>This app</dt><dd id="app">…</dd>
+    </dl>
+    <div id="buttons">
+        <button id="trial" hidden>Try it for 5 minutes</button>
+        <button id="enable" hidden>Turn on</button>
+        <button id="disable" hidden>Turn off</button>
+        <button id="hide" hidden>Hide this app</button>
+    </div>
+    <pre id="output"></pre>
+</main>
+<script src="app.js"></script>
+</body>
+</html>

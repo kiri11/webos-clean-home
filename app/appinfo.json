@@ -1,0 +1,14 @@
+{
+    "id": "io.github.kiri11.cleanhome",
+    "version": "1.0.0",
+    "vendor": "kiri11",
+    "type": "web",
+    "main": "index.html",
+    "title": "Clean Home",
+    "appDescription": "A quiet Home screen for rooted LG webOS TVs.",
+    "icon": "icon.png",
+    "largeIcon": "largeIcon.png",
+    "iconColor": "#1a1e33",
+    "bgColor": "#0b0c14",
+    "disableBackHistoryAPI": true
+}

@@ -1,0 +1,29 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Build
+        run: |
+          export SOURCE_DATE_EPOCH=$(git log -1 --format=%ct)
+          python3 tools/build-ipk.py
+          cp dist/*_all.ipk dist/clean-home.ipk
+          echo "VERSION=$(python3 -c 'import json; print(json.load(open("dist/io.github.kiri11.cleanhome.manifest.json"))["version"])')" >> "$GITHUB_ENV"
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "v$VERSION" dist/* --target "$GITHUB_SHA" --title "v$VERSION" --notes "$(git log -1 --format=%B)"
