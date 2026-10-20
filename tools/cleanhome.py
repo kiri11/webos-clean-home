@@ -1,12 +1,13 @@
 """Install and control Clean Home on a rooted LG TV over telnet.
 
-cleanhome.py [--host IP] push [DIR]        upload clean-home/ to DIR (default /media/developer/clean-home)
-cleanhome.py [--host IP] home <args>       run clean-home.sh <args> on the TV
+cleanhome.py [--host IP] push [DIR]        upload clean-home/ to DIR (default: the copy in use)
+cleanhome.py [--host IP] home <args>       run clean-home.sh <args> from the copy in use
 cleanhome.py [--host IP] install FILE.ipk  install the Clean Home app
 cleanhome.py [--host IP] run "<command>"   run a shell command as root and print its output
 cleanhome.py [--host IP] shot [file.jpg]   save a 1920x1080 capture of the screen
 
-The TV address comes from --host or LGTV_HOST.
+The copy in use is the one the boot hook runs, else the installed app's, else
+/media/developer/clean-home. The TV address comes from --host or LGTV_HOST.
 """
 import base64
 import os
@@ -19,6 +20,11 @@ import time
 HOST = os.environ.get("LGTV_HOST", "")
 PAYLOAD = pathlib.Path(__file__).resolve().parent.parent / "clean-home"
 HOME_DIR = "/media/developer/clean-home"
+APP_DIR = "/media/developer/apps/usr/palm/applications/io.github.kiri11.cleanhome/clean-home"
+IN_USE = ("D=$(grep -o '/[^ ]*/clean-home.sh' /var/lib/webosbrew/init.d/60-clean-home 2>/dev/null | head -1)\n"
+          "D=${D%/clean-home.sh}\n"
+          "[ -n \"$D\" ] && [ -x \"$D/clean-home.sh\" ] || D=" + APP_DIR + "\n"
+          "[ -x \"$D/clean-home.sh\" ] || D=" + HOME_DIR)
 PROMPT = re.compile(r"^\S* # ")
 IAC, DONT, DO, WONT, WILL, SB, SE = 255, 254, 253, 252, 251, 250, 240
 
@@ -79,11 +85,11 @@ def run(cmd, timeout=60):
     return "\n".join(lines[starts[-1] + 1:ends[-1]]), code
 
 
-def push(home_dir=HOME_DIR):
-    parts = ["mkdir -p %s" % home_dir]
+def push(home_dir=None):
+    parts = [IN_USE if home_dir is None else "D='%s'" % home_dir, 'mkdir -p "$D"']
     for f in sorted(p for p in PAYLOAD.iterdir() if p.is_file()):
         data = base64.encodebytes(f.read_bytes()).decode()
-        dest = "%s/%s" % (home_dir, f.name)
+        dest = '"$D/%s"' % f.name
         parts.append("base64 -d > %s.new <<'B64EOF'\n%sB64EOF" % (dest, data))
         parts.append("cat %s.new > %s && rm %s.new" % (dest, dest, dest))
         if f.suffix == ".sh":
@@ -120,11 +126,11 @@ def main():
         print(__doc__)
         return 2
     if args[0] == "push":
-        out, code = push(args[1] if len(args) > 1 else HOME_DIR)
+        out, code = push(args[1] if len(args) > 1 else None)
     elif args[0] == "shot":
         out, code = shot(args[1] if len(args) > 1 else "clean-home.jpg")
     elif args[0] == "home":
-        out, code = run("%s/clean-home.sh %s" % (HOME_DIR, " ".join(args[1:])), 120)
+        out, code = run('%s\n"$D/clean-home.sh" %s' % (IN_USE, " ".join(args[1:])), 120)
     elif args[0] == "install" and len(args) > 1:
         out, code = install(args[1])
     elif args[0] == "run":

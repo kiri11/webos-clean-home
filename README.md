@@ -56,13 +56,13 @@ The app runs everything through the Homebrew Channel's root service.
 `tools/cleanhome.py` talks to the TV over telnet (turn it on in the Homebrew Channel's settings) and needs only Python 3:
 
 ```sh
-python tools/cleanhome.py --host 192.168.1.50 push           # upload clean-home/ to /media/developer/clean-home
+python tools/cleanhome.py --host 192.168.1.50 push           # upload clean-home/ to the copy in use
 python tools/cleanhome.py --host 192.168.1.50 home trial 600 # mount for 10 minutes, then roll back by itself
 python tools/cleanhome.py --host 192.168.1.50 home enable    # mount now and at every boot
 python tools/cleanhome.py --host 192.168.1.50 shot home.jpg  # screenshot
 ```
 
-You can also set `LGTV_HOST` instead of passing `--host`. Use either the app or this method, not both: whichever ran **Turn on** or `enable` last owns the boot hook.
+You can also set `LGTV_HOST` instead of passing `--host`. `push` and `home` work on the copy in use: the one the boot hook runs, else the installed app's, else `/media/developer/clean-home`. So on a TV with the app they act on the app's files, and `push` overwrites them until the app is reinstalled; `push DIR` uploads somewhere else.
 
 ## Turn it off or uninstall
 
