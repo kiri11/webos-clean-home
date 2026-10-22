@@ -1,4 +1,4 @@
-"""Install and control Clean Home on a rooted LG TV over telnet.
+"""Install and control Clean Home on a rooted LG TV over SSH, or telnet when SSH key login fails.
 
 cleanhome.py [--host IP] push [DIR]        upload clean-home/ to DIR (default: the copy in use)
 cleanhome.py [--host IP] home <args>       run clean-home.sh <args> from the copy in use
@@ -14,6 +14,7 @@ import os
 import pathlib
 import re
 import socket
+import subprocess
 import sys
 import time
 
@@ -25,6 +26,7 @@ IN_USE = ("D=$(grep -o '/[^ ]*/clean-home.sh' /var/lib/webosbrew/init.d/60-clean
           "D=${D%/clean-home.sh}\n"
           "[ -n \"$D\" ] && [ -x \"$D/clean-home.sh\" ] || D=" + APP_DIR + "\n"
           "[ -x \"$D/clean-home.sh\" ] || D=" + HOME_DIR)
+SSH = ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=6", "-o", "StrictHostKeyChecking=accept-new"]
 PROMPT = re.compile(r"^\S* # ")
 IAC, DONT, DO, WONT, WILL, SB, SE = 255, 254, 253, 252, 251, 250, 240
 
@@ -50,6 +52,27 @@ def _strip(sock, data):
 
 
 def run(cmd, timeout=60):
+    try:
+        ssh = subprocess.run(SSH + ["root@" + HOST, "true"], stdin=subprocess.DEVNULL,
+                             capture_output=True, timeout=15).returncode == 0
+    except (OSError, subprocess.TimeoutExpired):
+        ssh = False
+    return run_ssh(cmd, timeout) if ssh else run_telnet(cmd, timeout)
+
+
+def run_ssh(cmd, timeout):
+    remote = "f=/tmp/cleanhome.$$.sh; cat > $f; sh $f </dev/null 2>&1; r=$?; rm -f $f; exit $r"
+    try:
+        p = subprocess.run(SSH + ["root@" + HOST, remote], input=cmd.encode(), capture_output=True, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        raise RuntimeError("no complete output from the TV within %ds" % timeout)
+    out = p.stdout.decode("utf-8", "replace").replace("\r", "")
+    if p.returncode == 255 and not out:
+        out = p.stderr.decode("utf-8", "replace")
+    return out.removesuffix("\n"), p.returncode
+
+
+def run_telnet(cmd, timeout):
     begin, end = "__B%d__" % time.time_ns(), "__E%d__" % time.time_ns()
     done = re.compile(re.escape(end) + r"(\d+)$")
     s = socket.create_connection((HOST, 23), timeout=10)

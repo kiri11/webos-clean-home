@@ -53,7 +53,7 @@ The app runs everything through the Homebrew Channel's root service.
 
 ### From a computer
 
-`tools/cleanhome.py` talks to the TV over telnet (turn it on in the Homebrew Channel's settings) and needs only Python 3:
+`tools/cleanhome.py` needs only Python 3.9+. It talks to the TV as `root` over SSH when key login works (OpenSSH's `ssh` on your PATH, your key in `/home/root/.ssh/authorized_keys`), otherwise over telnet (turn it on in the Homebrew Channel's settings):
 
 ```sh
 python tools/cleanhome.py --host 192.168.1.50 push           # upload clean-home/ to the copy in use
