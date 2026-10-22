@@ -51,6 +51,7 @@ def _strip(sock, data):
 
 def run(cmd, timeout=60):
     begin, end = "__B%d__" % time.time_ns(), "__E%d__" % time.time_ns()
+    done = re.compile(re.escape(end) + r"(\d+)$")
     s = socket.create_connection((HOST, 23), timeout=10)
     s.settimeout(0.5)
     time.sleep(0.8)
@@ -71,18 +72,19 @@ def run(cmd, timeout=60):
             break
         buf += _strip(s, chunk)
         lines = [PROMPT.sub("", l) for l in buf.decode("utf-8", "replace").replace("\r", "").split("\n")]
-        if any(l.startswith(end) and l[len(end):].isdigit() for l in lines[:-1]):
+        if any(done.search(l) for l in lines[:-1]):
             break
     s.sendall(b"exit\n")
     s.close()
     text = buf.decode("utf-8", "replace").replace("\r", "")
     lines = [PROMPT.sub("", l) for l in text.split("\n")]
     starts = [i for i, l in enumerate(lines) if l.rstrip().endswith(begin) and "echo " + begin not in l]
-    ends = [i for i, l in enumerate(lines) if l.startswith(end) and l[len(end):].isdigit()]
+    ends = [i for i, l in enumerate(lines) if done.search(l)]
     if not starts or not ends:
         raise RuntimeError("no complete output from the TV:\n" + text[-2000:])
-    code = int(lines[ends[-1]][len(end):] or 1)
-    return "\n".join(lines[starts[-1] + 1:ends[-1]]), code
+    m = done.search(lines[ends[-1]])
+    last = lines[ends[-1]][:m.start()]
+    return "\n".join(lines[starts[-1] + 1:ends[-1]] + ([last] if last else [])), int(m.group(1))
 
 
 def push(home_dir=None):
