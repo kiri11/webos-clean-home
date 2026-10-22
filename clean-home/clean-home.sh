@@ -83,7 +83,7 @@ cached_check() {
     fi
     out=$(check)
     code=$?
-    printf '%s\n%s\n%s\n' "$key" "$code" "$out" > "$CACHE"
+    [ "$(fingerprint) $(sha "$SRC/MainView.qml")" = "$key" ] && printf '%s\n%s\n%s\n' "$key" "$code" "$out" > "$CACHE"
     echo "$out"
     return $code
 }
