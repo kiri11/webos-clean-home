@@ -9,7 +9,7 @@ Clean Home doesn't replace LG's Home app. It swaps in a different view (`MainVie
 ## What you get
 
 - Clock and date in the corner.
-- Your apps in two rows, in the same order as the stock Home and its Edit App List. Apps fill pages of five columns, top row first, and scroll sideways one column at a time; the next column peeks in at the right edge.
+- Your apps in two rows, in the same order as the stock Home and its Edit App List. Apps fill pages of five columns, top row first; the last page splits its apps evenly between the two rows. The rows scroll sideways one column at a time; the next column peeks in at the right edge.
 - A row with your HDMI inputs, using the names you gave them on the TV (unplugged ones are dimmed), plus Settings.
 - Focus goes back to the first app every time Home opens. Number keys 1–9 open the first nine apps, and 0 opens the Clean Home app.
 - To move an app, hold OK on it for 0.7 s (it gets a blue ring and arrows), move it with the arrows, then press OK or Back. The new order is saved in the TV's own app list, so stock Home uses it too.

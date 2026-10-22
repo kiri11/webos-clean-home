@@ -600,15 +600,23 @@ FocusScope {
         appGrid.forceActiveFocus();
     }
 
+    function pageWidth(page) {
+        return Math.min(columns, Math.ceil((appGrid.count - page * 2 * columns) / 2));
+    }
+
     function cellOf(index) {
         var page = Math.floor(index / (2 * columns));
         var k = index % (2 * columns);
-        return { column: page * columns + k % columns, row: Math.floor(k / columns) };
+        var width = pageWidth(page);
+        return { column: page * columns + k % width, row: Math.floor(k / width) };
     }
 
     function indexAt(column, row) {
         if (column < 0 || row < 0 || row > 1) return -1;
-        var index = Math.floor(column / columns) * 2 * columns + row * columns + column % columns;
+        var page = Math.floor(column / columns);
+        var width = pageWidth(page);
+        if (column % columns >= width) return -1;
+        var index = page * 2 * columns + row * width + column % columns;
         return index < appGrid.count ? index : -1;
     }
 
